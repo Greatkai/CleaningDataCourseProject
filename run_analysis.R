@@ -13,40 +13,38 @@ activityName <- function(num)
         activityNames[[num]]
 }
 
-#This function read both test and train data, and put them into a tidy dataset
+#This function read both test and train data, extract required data and put them into a tidy dataset
 readData <- function()
 {
+        #read features and figure out which ones are required
+        features <- read.table("./UCI HAR Dataset/features.txt")
+        required_features <- grep("-mean()|-std()",features[,2])
+        tidy_names <- tolower(features[,2])
+        tidy_names <- gsub("[-()]","",tidy_names)
+        
         #read test data from txt file
         test_x <- read.table("./UCI HAR Dataset/test/X_test.txt")
         test_y <- read.table("./UCI HAR Dataset/test/y_test.txt")
         test_subject <- read.table("./UCI HAR Dataset/test/subject_test.txt")
         
-        #calculate required data
-        test_x_mean <- apply(test_x, 1, mean) #calculate the average of each observation
-        test_x_std <- apply(test_x, 1, sd) #calculate the standard deviation of each observation
-        #rename the columun names into a descriptive ones
-        test_subject <- rename(test_subject, subject = V1)
-        test_y <- rename(test_y, activity = V1)
+        #get required data
+        required_test_x <- test_x[,required_features]
         
         #create test dataset
-        test_data <- cbind(test_subject,test_x_mean,test_x_std,test_y)
-        test_data <- rename(test_data, xmean = test_x_mean, xstd = test_x_std)
+        test_data <- cbind(test_subject,test_y,required_test_x)
         
         #read train data and process it in the same way above
         train_x <- read.table("./UCI HAR Dataset/train/X_train.txt")
         train_y <- read.table("./UCI HAR Dataset/train/y_train.txt")
         train_subject <- read.table("./UCI HAR Dataset/train/subject_train.txt")
+
+        required_train_x <- train_x[,required_features]
         
-        train_x_mean <- apply(train_x, 1, mean)
-        train_x_std <- apply(train_x, 1, sd)
-        train_subject <- rename(train_subject, subject = V1)
-        train_y <- rename(train_y, activity = V1)
-        
-        train_data <- cbind(train_subject,train_x_mean,train_x_std,train_y)
-        train_data <- rename(train_data, xmean = train_x_mean, xstd = train_x_std)
+        train_data <- cbind(train_subject,train_y,required_train_x)
         
         #bind test data and train data
         all_data <- rbind(test_data,train_data)
+        colnames(all_data) <- c("subject","activity",tidy_names[required_features])
         #take the code of activities and change it into descriptive activity name
         all_data$activity = sapply(all_data$activity, activityName)
         
@@ -55,46 +53,26 @@ readData <- function()
 
 processData <- function(activity_data)
 {
-        #get subjects' names and activities's names
-        subjects <- unique(activity_data$subject)
-        activities <- unique(activity_data$activity)
-        
-        id = 1; #to keep track of the row of data
-        subject <- c() #to record subject of each row
-        activity <- c() #to record activity name of each row
-        xmean <- c() #to record average xmean of each row
-        xstd <- c() #to record average xstd of each row
-        
-        #for each subject and each activity, calculate the average of each variable
-        for(sub in subjects)
-        {
-                for(act in activities)
-                {
-                        spec_data <- activity_data[which(activity_data$subject == sub & activity_data$activity == act),]
-                        subject[[id]] <- sub
-                        activity[[id]] <- act
-                        xmean[[id]] <- mean(spec_data$xmean)
-                        xstd[[id]] <- mean(spec_data$xstd)
-                        id <- id + 1
-                }
-        }
-        
-        #create data frame and sort it
-        rawdata <- data.frame(subject,activity,xmean,xstd)
+        # creates a second, independent tidy data set with the average of each 
+        # variable for each activity and each subject
+        activity_data$subject <- as.factor(activity_data$subject)
+        activity_data$activity <- as.factor(activity_data$activity)
+        meltdata <- melt(activity_data,id = c("subject","activity"))
+        rawdata <- dcast(meltdata, subject + activity ~ variable, mean)
         sortedData <- arrange(rawdata,subject)
         
         sortedData
 }
 
 library(dplyr)
+library(reshape2)
 
 #workDir is the project path, user can change it
-workDir <- "/Users/user/Desktop/Data\ Science/Getting and Cleaning Data/Course Project"
+workDir <- "/Users/user/Desktop/Data\ Science/Getting and Cleaning Data/Course Project/CleaningDataCourseProject/"
 setwd(workDir)
 
 #get the tidy dataset
 activity_data <- readData()
-write.table(activity_data,file = "./tidyActivityData.txt",row.names = FALSE)
 
 #get the processed dataset
 processed_data <- processData(activity_data)

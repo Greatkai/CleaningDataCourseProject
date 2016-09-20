@@ -2,7 +2,7 @@
 
 ## Overview
 
-As required, there are two tidy data sets, a codebook (CodeBook.md) and a run_analysis.R script.
+As required, there are one tidy data sets, a codebook (CodeBook.md) and a run_analysis.R script.
 
 Each dataset fit the standards:
 
@@ -20,9 +20,7 @@ As I read from the discussion forum, interial folder is not required. Therefore 
 
 ## Dataset
 
-The first dataset is  "tidyActivityData.txt". It meets the requirement 1~4.
-
-The second dataset is "processedTidyData.txt". It meets the requirement 5.
+​	The dataset is "processedTidyData.txt". It takes measurements of mean value and standard deviation. The data also include measurements of mean frequent value.
 
 ## run_analysis.R
 
@@ -47,10 +45,15 @@ activity_data <- readData()
 processed_data <- processData(activity_data)
 ```
 
-later, these two dataframes are written into txt files by
+activity_data is the tidy dataset descripted in requirement 1~4.
+
+processed_data is the final dataset.
+
+
+
+later, the processed dataframe is written into txt files by
 
 ```R
-write.table(activity_data,file = "./tidyActivityData.txt",row.names = FALSE)
 write.table(processed_data,file = "./processedTidyData.txt",row.names = FALSE)
 ```
 
