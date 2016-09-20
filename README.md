@@ -16,6 +16,8 @@ Therefore each dataset can be read into R by
 read.table(FILE, header = TRUE)
 ```
 
+As I read from the discussion forum, interial folder is not required. Therefore I just used the general x and y data.
+
 ## Dataset
 
 The first dataset is  "tidyActivityData.txt". It meets the requirement 1~4.
